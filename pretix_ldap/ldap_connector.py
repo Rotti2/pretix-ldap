@@ -1,5 +1,6 @@
 from ldap3 import Server, Connection
 from ldap3.utils.conv import escape_filter_chars
+from ldap3.utils.config import set_config_parameter, get_config_parameter
 import re
 import logging
 from django import forms
@@ -15,6 +16,11 @@ logger = logging.getLogger(__name__)
 class LDAPAuthBackend(BaseAuthBackend):
     def __init__(self):
         try:
+            self.excluded_attributes = get_config_parameter("ATTRIBUTES_EXCLUDED_FROM_CHECK")
+            self.excluded_attributes.append("createTimestamp")
+            self.excluded_attributes.append("modifyTimestamp")
+            set_config_parameter("ATTRIBUTES_EXCLUDED_FROM_CHECK", self.excluded_attributes)
+
             self.config = config
             self.server = Server(self.config.get("ldap", "bind_url"))
             self.connection = Connection(
